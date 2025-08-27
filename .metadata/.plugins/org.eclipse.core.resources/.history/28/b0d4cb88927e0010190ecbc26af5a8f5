@@ -1,0 +1,13 @@
+import java.util.List;
+import c.Users.Asus.AMD201.Order;
+
+public class Searching {
+    public static Order searchOrderById(List<Order> orders, String orderId) {
+        for (Order order : orders) {
+            if (order.orderId.equals(orderId)) {
+                return order;
+            }
+        }
+        return null;
+    }
+}

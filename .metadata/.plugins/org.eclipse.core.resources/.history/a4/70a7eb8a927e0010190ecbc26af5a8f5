@@ -1,0 +1,16 @@
+import java.util.List;
+import c.Users.Asus.AMD201.Book;
+
+public class Sorting {
+    public static void insertionSortByTitle(List<Book> books) {
+        for (int i = 1; i < books.size(); i++) {
+            Book key = books.get(i);
+            int j = i - 1;
+            while (j >= 0 && books.get(j).title.compareTo(key.title) > 0) {
+                books.set(j + 1, books.get(j));
+                j--;
+            }
+            books.set(j + 1, key);
+        }
+    }
+}

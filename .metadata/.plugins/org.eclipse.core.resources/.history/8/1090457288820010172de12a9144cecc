@@ -1,0 +1,284 @@
+package OnlineBook;
+
+import java.awt.*;
+import java.util.*;
+import javax.swing.*;
+
+public class Main {
+    private static java.util.List<Book> bookList = new ArrayList<>();
+    private static java.util.List<Book> orderList = new ArrayList<>();
+    private static DefaultListModel<String> bookListModel = new DefaultListModel<>();
+    private static DefaultListModel<String> orderListModel = new DefaultListModel<>();
+    private static JLabel totalOrderLabel = new JLabel("Tổng tiền đơn hàng: 0");
+    private static java.util.List<Order> allOrders = new ArrayList<>();
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Online Bookstore");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(700, 400);
+        frame.setLayout(new GridLayout(1, 2));
+
+     // Left Panel: Add books to the inventory
+        JPanel addBookPanel = new JPanel(new BorderLayout());
+        addBookPanel.setBorder(BorderFactory.createTitledBorder("Add books to the inventory"));
+
+        JPanel addBookForm = new JPanel(new GridLayout(5, 2));
+        JTextField titleField = new JTextField();
+        JTextField authorField = new JTextField();
+        JTextField quantityField = new JTextField();
+        JTextField priceField = new JTextField();
+
+        addBookForm.add(new JLabel("Book title:"));
+        addBookForm.add(titleField);
+        addBookForm.add(new JLabel("Author:"));
+        addBookForm.add(authorField);
+        addBookForm.add(new JLabel("Quantity:"));
+        addBookForm.add(quantityField);
+        addBookForm.add(new JLabel("Price:"));
+        addBookForm.add(priceField);
+
+        JButton addBookBtn = new JButton("Add book");
+        addBookForm.add(new JLabel());
+        addBookForm.add(addBookBtn);
+
+        JList<String> bookJList = new JList<>(bookListModel);
+        JScrollPane bookScroll = new JScrollPane(bookJList);
+
+        addBookPanel.add(addBookForm, BorderLayout.NORTH);
+        addBookPanel.add(bookScroll, BorderLayout.CENTER);
+
+     // Right panel: Book and display order
+        JPanel orderPanel = new JPanel(new BorderLayout());
+        orderPanel.setBorder(BorderFactory.createTitledBorder("Book"));
+
+        JPanel orderForm = new JPanel(new GridLayout(4, 2));
+        JTextField customerField = new JTextField();
+        JTextField addressField = new JTextField();
+        JButton addToOrderBtn = new JButton("Add to order");
+        JButton placeOrderBtn = new JButton("Order");
+
+        orderForm.add(new JLabel("Customer name:"));
+        orderForm.add(customerField);
+        orderForm.add(new JLabel("Address:"));
+        orderForm.add(addressField);
+        orderForm.add(new JLabel("Select book:"));
+        JComboBox<String> bookCombo = new JComboBox<>();
+        orderForm.add(bookCombo);
+        orderForm.add(new JLabel("Quantity:"));
+        JTextField orderQtyField = new JTextField();
+        orderForm.add(orderQtyField);
+
+        JList<String> orderJList = new JList<>(orderListModel);
+        JScrollPane orderScroll = new JScrollPane(orderJList);
+
+     // Panel displays a list of all placed orders
+    JTextArea orderInfoArea = new JTextArea(12, 30);
+    orderInfoArea.setEditable(false);
+    JScrollPane infoScroll = new JScrollPane(orderInfoArea);
+
+    // Panel searches for Order ID
+    JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JTextField searchOrderIdField = new JTextField(10);
+    JButton searchBtn = new JButton("Find Order ID");
+    JButton deleteBtn = new JButton("Delete Order");
+    searchPanel.add(new JLabel("Find/Delete Order by Order ID:"));
+    searchPanel.add(searchOrderIdField);
+    searchPanel.add(searchBtn);
+    searchPanel.add(deleteBtn);
+
+    JPanel orderBtnPanel = new JPanel();
+    orderBtnPanel.add(addToOrderBtn);
+    orderBtnPanel.add(placeOrderBtn);
+
+    JPanel rightPanel = new JPanel(new BorderLayout());
+    rightPanel.add(orderForm, BorderLayout.NORTH);
+    rightPanel.add(orderScroll, BorderLayout.CENTER);
+    rightPanel.add(orderBtnPanel, BorderLayout.SOUTH);
+
+    JPanel rightWithTotal = new JPanel(new BorderLayout());
+    rightWithTotal.add(rightPanel, BorderLayout.NORTH);
+    rightWithTotal.add(totalOrderLabel, BorderLayout.CENTER);
+    orderPanel.add(rightWithTotal, BorderLayout.NORTH);
+    orderPanel.add(infoScroll, BorderLayout.CENTER);
+    orderPanel.add(searchPanel, BorderLayout.SOUTH);
+
+    // Book adding event 
+    addBookBtn.addActionListener(e -> { 
+    String title = titleField.getText().trim(); 
+    String author = authorField.getText().trim(); 
+    String qtyStr = quantityField.getText().trim(); 
+    String priceStr = priceField.getText().trim(); 
+    if (title.isEmpty() || author.isEmpty() || qtyStr.isEmpty() || priceStr.isEmpty()) { 
+    	JOptionPane.showMessageDialog(frame, "Please enter complete book information!"); 
+    	return; 
+    } 
+    
+    int quantity; 
+    double price; 
+    
+    try { 
+    	quantity = Integer.parseInt(qtyStr); 
+    	price = Double.parseDouble(priceStr); 
+    } catch (Exception ex) { 
+    	JOptionPane.showMessageDialog(frame, "Number quantity and price must be numbers!");
+    	return;
+    }
+    if (quantity <= 0 || price < 0) {
+    	JOptionPane.showMessageDialog(frame, "Quantity > 0 and price >= 0!");
+    	return;
+    }
+            Book book = new Book(title, author, quantity, price);
+            bookList.add(book);
+            bookListModel.addElement(title + " | " + author + " | Quantity: " + quantity + " | Price: " + book.getPriceWithCurrency());
+            bookCombo.addItem(title + " | " + author);
+            titleField.setText("");
+            authorField.setText("");
+            quantityField.setText("");
+            priceField.setText("");
+        });
+
+    // Book added to order event
+    addToOrderBtn.addActionListener(e -> {
+    	int idx = bookCombo.getSelectedIndex();
+    	if (idx < 0 || idx >= bookList.size()) {
+    		JOptionPane.showMessageDialog(frame, "Valid book selected!");
+    		return;
+    		}
+    Book selected = bookList.get(idx);
+    	int qty;
+    try {
+    	qty = Integer.parseInt(orderQtyField.getText().trim());
+    } catch (Exception ex) {
+    	JOptionPane.showMessageDialog(frame, "Quantity must be a number!");
+    	return;
+    	}
+    	if (qty <= 0 || qty > selected.quantity) {
+    		JOptionPane.showMessageDialog(frame, "Quantity is not valid!");
+    		return;
+    		}
+    	double itemTotal = selected.price * qty; 
+    	orderList.add(new Book(selected.title, selected.author, qty, selected.price)); 
+    	orderListModel.addElement(selected.title + " | " + selected.author + " | Quantity: " + qty + " | Price: " + selected.getPriceWithCurrency() + " | Total amount: " + itemTotal + " USD"); 
+    	orderQtyField.setText(""); 
+    	
+	    // Update the total amount dynamically 
+	    double total = 0; 
+	    for (Book b : orderList) { 
+	    	total += b.price * b.quantity; 
+	    } 
+	    totalOrderLabel.setText("Total order amount: " + total); 
+	    });
+
+    	// Order event
+        placeOrderBtn.addActionListener(e -> {
+            String customer = customerField.getText().trim();
+            String address = addressField.getText().trim();
+            if (customer.isEmpty() || address.isEmpty() || orderList.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please fill in complete information and select book!");
+                return;
+            }
+            String orderId = "001" + (allOrders.size() + 1);
+            Order order = new Order(orderId, customer, address, new ArrayList<>(orderList));
+            allOrders.add(order);
+            
+         // Show all orders
+            StringBuilder sb = new StringBuilder();
+            for (Order o : allOrders) {
+            	sb.append("Order ID: ").append(o.orderId).append("\n");
+            	sb.append("Customer: ").append(o.customerName).append("\n");
+            	sb.append("Address: ").append(o.shippingAddress).append("\n");
+            	sb.append("List of books ordered:\n");
+                double total = 0;
+                for (Book b : o.books) {
+                    double itemTotal = b.price * b.quantity;
+                    sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ").append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ").append(itemTotal).append("\n");
+                    total += itemTotal;
+                }
+                sb.append("Total order amount: ").append(total).append(" USD\n");
+                sb.append("-----------------------------\n");
+            }
+            orderInfoArea.setText(sb.toString());
+            orderList.clear();
+            orderListModel.clear();
+            totalOrderLabel.setText("Total order amount: 0");
+        });
+
+        // Order ID search event
+        searchBtn.addActionListener(e -> {
+            String searchId = searchOrderIdField.getText().trim();
+            if (searchId.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Nhập Order ID cần tìm!");
+                return;
+            }
+            Order found = null;
+            for (Order o : allOrders) {
+                if (o.orderId.equalsIgnoreCase(searchId)) {
+                    found = o;
+                    break;
+                }
+            }
+            if (found != null) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Order ID: ").append(found.orderId).append("\n"); 
+                sb.append("Customer: ").append(found.customerName).append("\n"); 
+                sb.append("Address: ").append(found.shippingAddress).append("\n"); 
+                sb.append("List of books ordered:\n");
+                double total = 0;
+                for (Book b : found.books) {
+                    double itemTotal = b.price * b.quantity;
+                    sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ").append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ").append(itemTotal).append("\n");
+                    total += itemTotal;
+                }
+                sb.append("Total order amount: ").append(total).append(" USD\n");
+                orderInfoArea.setText(sb.toString());
+            } else {
+                orderInfoArea.setText("Order with Order ID not found: " + searchId);
+            }
+        });
+
+        // Order deletion event
+        deleteBtn.addActionListener(e -> {
+            String deleteId = searchOrderIdField.getText().trim();
+            if (deleteId.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Enter Order ID to delete!");
+                return;
+            }
+            boolean removed = false;
+            Iterator<Order> it = allOrders.iterator();
+            while (it.hasNext()) {
+                Order o = it.next();
+                if (o.orderId.equalsIgnoreCase(deleteId)) {
+                    it.remove();
+                    removed = true;
+                    break;
+                }
+            }
+            if (removed) {
+            	// Display the order list again
+                StringBuilder sb = new StringBuilder();
+                for (Order o : allOrders) {
+                	sb.append("Order ID: ").append(o.orderId).append("\n");
+                	sb.append("Customer: ").append(o.customerName).append("\n");
+                	sb.append("Address: ").append(o.shippingAddress).append("\n");
+                	sb.append("List of books ordered:\n");
+                    double total = 0;
+                    for (Book b : o.books) {
+                        double itemTotal = b.price * b.quantity;
+                        sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ").append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ").append(itemTotal).append("\n");
+                        total += itemTotal;
+                    }
+                    sb.append("Total order amount: ").append(total).append(" USD\n");
+                    sb.append("-----------------------------\n");
+                }
+                orderInfoArea.setText(sb.toString());
+                JOptionPane.showMessageDialog(frame, "Deleted order with Order ID: " + deleteId);
+            } else {
+                JOptionPane.showMessageDialog(frame, "Order with Order ID not found: " + deleteId);
+            }
+        });
+
+        frame.add(addBookPanel);
+        frame.add(orderPanel);
+        frame.setVisible(true);
+    }
+}

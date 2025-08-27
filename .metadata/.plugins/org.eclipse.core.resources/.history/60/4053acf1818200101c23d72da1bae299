@@ -1,0 +1,19 @@
+package OnlineBook;
+
+public class Book {
+    String title;
+    String author;
+    int quantity;
+    double price;
+
+    public Book(String title, String author, int quantity, double price) {
+        this.title = title;
+        this.author = author;
+        this.quantity = quantity;
+        this.price = price;
+    }
+    // Constructor cũ cho các chỗ cũ nếu cần
+    public Book(String title, String author, int quantity) {
+        this(title, author, quantity, 0);
+    }
+}
