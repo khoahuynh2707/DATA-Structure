@@ -208,7 +208,7 @@ public class Main {
         searchBtn.addActionListener(e -> {
             String searchId = searchOrderIdField.getText().trim();
             if (searchId.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Nhập Order ID cần tìm!");
+                JOptionPane.showMessageDialog(frame, "Enter the Order ID you want to find!");
                 return;
             }
             Order found = null;
