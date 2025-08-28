@@ -12,6 +12,7 @@ public class Main {
     private static final JLabel totalOrderLabel = new JLabel("Total order amount: 0");
     private static final java.util.List<Order> allOrders = new ArrayList<>();
     private static final Stack<Book> bookHistory = new Stack<>();
+    private static final StackADT<Order> orderHistory = new StackADT<>();
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Online Bookstore");
@@ -19,7 +20,7 @@ public class Main {
         frame.setSize(700, 400);
         frame.setLayout(new GridLayout(1, 2));
 
-     // Left Panel: Add books to the inventory
+        // Left Panel: Add books to the inventory
         JPanel addBookPanel = new JPanel(new BorderLayout());
         addBookPanel.setBorder(BorderFactory.createTitledBorder("Add books to the inventory"));
 
@@ -48,7 +49,7 @@ public class Main {
         addBookPanel.add(addBookForm, BorderLayout.NORTH);
         addBookPanel.add(bookScroll, BorderLayout.CENTER);
 
-     // Right panel: Book and display order
+        // Right panel: Book and display order
         JPanel orderPanel = new JPanel(new BorderLayout());
         orderPanel.setBorder(BorderFactory.createTitledBorder("Book"));
 
@@ -72,137 +73,160 @@ public class Main {
         JList<String> orderJList = new JList<>(orderListModel);
         JScrollPane orderScroll = new JScrollPane(orderJList);
 
-     // Panel displays a list of all placed orders
-    JTextArea orderInfoArea = new JTextArea(12, 30);
-    orderInfoArea.setEditable(false);
-    JScrollPane infoScroll = new JScrollPane(orderInfoArea);
+        // Panel displays a list of all placed orders
+        JTextArea orderInfoArea = new JTextArea(12, 30);
+        orderInfoArea.setEditable(false);
+        JScrollPane infoScroll = new JScrollPane(orderInfoArea);
 
-    // Panel searches for Order ID
-    JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    JTextField searchOrderIdField = new JTextField(10);
-    JButton searchBtn = new JButton("Find Order ID");
-    JButton deleteBtn = new JButton("Delete Order");
-    searchPanel.add(new JLabel("Find/Delete Order by Order ID:"));
-    searchPanel.add(searchOrderIdField);
-    searchPanel.add(searchBtn);
-    searchPanel.add(deleteBtn);
+        // Panel searches for Order ID
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JTextField searchOrderIdField = new JTextField(10);
+        JButton searchBtn = new JButton("Find Order ID");
+        JButton deleteBtn = new JButton("Delete Order");
+        searchPanel.add(new JLabel("Find/Delete Order by Order ID:"));
+        searchPanel.add(searchOrderIdField);
+        searchPanel.add(searchBtn);
+        searchPanel.add(deleteBtn);
 
-    JPanel orderBtnPanel = new JPanel();
-    orderBtnPanel.add(addToOrderBtn);
-    orderBtnPanel.add(placeOrderBtn);
+        JPanel orderBtnPanel = new JPanel();
+        orderBtnPanel.add(addToOrderBtn);
+        orderBtnPanel.add(placeOrderBtn);
 
-    JPanel rightPanel = new JPanel(new BorderLayout());
-    rightPanel.add(orderForm, BorderLayout.NORTH);
-    rightPanel.add(orderScroll, BorderLayout.CENTER);
-    rightPanel.add(orderBtnPanel, BorderLayout.SOUTH);
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.add(orderForm, BorderLayout.NORTH);
+        rightPanel.add(orderScroll, BorderLayout.CENTER);
+        rightPanel.add(orderBtnPanel, BorderLayout.SOUTH);
 
-    JPanel rightWithTotal = new JPanel(new BorderLayout());
-    rightWithTotal.add(rightPanel, BorderLayout.NORTH);
-    rightWithTotal.add(totalOrderLabel, BorderLayout.CENTER);
-    orderPanel.add(rightWithTotal, BorderLayout.NORTH);
-    orderPanel.add(infoScroll, BorderLayout.CENTER);
-    orderPanel.add(searchPanel, BorderLayout.SOUTH);
+        JPanel rightWithTotal = new JPanel(new BorderLayout());
+        rightWithTotal.add(rightPanel, BorderLayout.NORTH);
+        rightWithTotal.add(totalOrderLabel, BorderLayout.CENTER);
+        orderPanel.add(rightWithTotal, BorderLayout.NORTH);
+        orderPanel.add(infoScroll, BorderLayout.CENTER);
+        orderPanel.add(searchPanel, BorderLayout.SOUTH);
 
-    // Book adding event 
-    addBookBtn.addActionListener(e -> { 
-    String title = titleField.getText().trim(); 
-    String author = authorField.getText().trim(); 
-    String qtyStr = quantityField.getText().trim(); 
-    String priceStr = priceField.getText().trim(); 
-    if (title.isEmpty() || author.isEmpty() || qtyStr.isEmpty() || priceStr.isEmpty()) { 
-    	JOptionPane.showMessageDialog(frame, "Please enter complete book information!"); 
-    	return; 
-    }  
-    int quantity; 
-    double price; 
-    
-    try { 
-    	quantity = Integer.parseInt(qtyStr); 
-    	price = Double.parseDouble(priceStr); 
-    } catch (NumberFormatException ex) { 
-    	JOptionPane.showMessageDialog(frame, "Number quantity and price must be numbers!");
-    	return;
-    }
-    if (quantity <= 0 || price < 0) {
-    	JOptionPane.showMessageDialog(frame, "Quantity > 0 and price >= 0!");
-    	return;
-    }
+        // Book adding event
+        addBookBtn.addActionListener(e -> {
+            String title = titleField.getText().trim();
+            String author = authorField.getText().trim();
+            String qtyStr = quantityField.getText().trim();
+            String priceStr = priceField.getText().trim();
+            if (title.isEmpty() || author.isEmpty() || qtyStr.isEmpty() || priceStr.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter complete book information!");
+                return;
+            }
+            int quantity;
+            double price;
+
+            try {
+                quantity = Integer.parseInt(qtyStr);
+                price = Double.parseDouble(priceStr);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(frame, "Number quantity and price must be numbers!");
+                return;
+            }
+            if (quantity <= 0 || price < 0) {
+                JOptionPane.showMessageDialog(frame, "Quantity > 0 and price >= 0!");
+                return;
+            }
             Book book = new Book(title, author, quantity, price);
             bookList.add(book);
             bookHistory.push(book); // Add to history
-            bookListModel.addElement(title + " | " + author + " | Quantity: " + quantity + " | Price: " + book.getPriceWithCurrency());
+            bookListModel.addElement(
+                    title + " | " + author + " | Quantity: " + quantity + " | Price: " + book.getPriceWithCurrency());
             bookCombo.addItem(title + " | " + author);
+
             titleField.setText("");
             authorField.setText("");
             quantityField.setText("");
             priceField.setText("");
         });
 
-    // Book added to order event
-    addToOrderBtn.addActionListener(e -> {
-    	int idx = bookCombo.getSelectedIndex();
-    	if (idx < 0 || idx >= bookList.size()) {
-    		JOptionPane.showMessageDialog(frame, "Valid book selected!");
-    		return;
-    		}
-    Book selected = bookList.get(idx);
-    	int qty;
-    try {
-    	qty = Integer.parseInt(orderQtyField.getText().trim());
-    } catch (NumberFormatException ex) {
-    	JOptionPane.showMessageDialog(frame, "Quantity must be a number!");
-    	return;
-    	}
-    	if (qty <= 0 || qty > selected.quantity) {
-    		JOptionPane.showMessageDialog(frame, "Quantity is not valid!");
-    		return;
-    		}
-    	double itemTotal = selected.price * qty; 
-    	orderList.add(new Book(selected.title, selected.author, qty, selected.price)); 
-    	orderListModel.addElement(selected.title + " | " + selected.author + " | Quantity: " + qty + " | Price: " + selected.getPriceWithCurrency() + " | Total amount: " + itemTotal + " USD"); 
-    	orderQtyField.setText(""); 
-    	
-	    // Update the total amount dynamically 
-	    double total = 0; 
-	    for (Book b : orderList) { 
-	    	total += b.price * b.quantity; 
-	    } 
-	    totalOrderLabel.setText("Total order amount: " + total); 
-	    });
-
-    	// Order event
-        placeOrderBtn.addActionListener(e -> {
-            String customer = customerField.getText().trim();
-            String address = addressField.getText().trim();
-            if (customer.isEmpty() || address.isEmpty() || orderList.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Please fill in complete information and select book!");
+        // Book added to order event
+        addToOrderBtn.addActionListener(e -> {
+            int idx = bookCombo.getSelectedIndex();
+            if (idx < 0 || idx >= bookList.size()) {
+                JOptionPane.showMessageDialog(frame, "Valid book selected!");
                 return;
             }
-            String orderId = "00" + (allOrders.size() + 1);
-            Order order = new Order(orderId, customer, address, new ArrayList<>(orderList));
-            allOrders.add(order);
-            
-         // Show all orders
-            StringBuilder sb = new StringBuilder();
-            for (Order o : allOrders) {
-            	sb.append("Order ID: ").append(o.orderId).append("\n");
-            	sb.append("Customer: ").append(o.customerName).append("\n");
-            	sb.append("Address: ").append(o.shippingAddress).append("\n");
-            	sb.append("List of books ordered:\n");
-                double total = 0;
-                for (Book b : o.books) {
-                    double itemTotal = b.price * b.quantity;
-                    sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ").append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ").append(itemTotal).append("\n");
-                    total += itemTotal;
-                }
-                sb.append("Total order amount: ").append(total).append(" USD\n");
-                sb.append("-----------------------------\n");
+            Book selected = bookList.get(idx);
+            int qty;
+            try {
+                qty = Integer.parseInt(orderQtyField.getText().trim());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(frame, "Quantity must be a number!");
+                return;
             }
-            orderInfoArea.setText(sb.toString());
+            if (qty <= 0 || qty > selected.quantity) {
+                JOptionPane.showMessageDialog(frame, "Quantity is not valid!");
+                return;
+            }
+            double itemTotal = selected.price * qty;
+            orderList.add(new Book(selected.title, selected.author, qty, selected.price));
+            orderListModel
+                    .addElement(" | Title: " + selected.title + " | Author: " + selected.author + " | Quantity: " + qty
+                            + " | Price: "
+                            + selected.getPriceWithCurrency() + " | Total amount: " + itemTotal + " USD");
+            orderQtyField.setText("");
+
+            // Update the total amount dynamically
+            double total = 0;
+            for (Book b : orderList) {
+                total += b.price * b.quantity;
+            }
+            totalOrderLabel.setText("Total order amount: " + total);
+        });
+
+        // Event: Place order and save to history
+        placeOrderBtn.addActionListener(e -> {
+            if (orderList.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "No items in the order list to place an order.");
+                return;
+            }
+            String customer = customerField.getText().trim();
+            String address = addressField.getText().trim();
+            if (customer.isEmpty() || address.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter customer and address details.");
+                return;
+            }
+            // Generate a shorter random order ID
+            String orderId = String.valueOf(new Random().nextInt(90000) + 10000); 
+            Order newOrder = new Order(orderId, customer, address, new ArrayList<>(orderList));
+            allOrders.add(newOrder);
+            orderHistory.push(newOrder); // Save to history
             orderList.clear();
             orderListModel.clear();
             totalOrderLabel.setText("Total order amount: 0");
+            
+            // Update orderInfoArea to display the new order
+            orderInfoArea.append("Order ID: " + newOrder.orderId + "\n");
+            orderInfoArea.append("Customer: " + newOrder.customerName + "\n");
+            orderInfoArea.append("Address: " + newOrder.shippingAddress + "\n");
+            orderInfoArea.append("Books:\n");
+            for (Book b : newOrder.books) {
+                orderInfoArea.append(" - Title: " + b.title + ", Quantity: " + b.quantity + ", Price: " + b.price + "\n");
+            }
+            orderInfoArea.append("\n");
+            
+            JOptionPane.showMessageDialog(frame, "Order placed successfully!");
         });
+
+        // Event: Undo last placed order
+        JButton undoOrderBtn = new JButton("Undo Last Order");
+        undoOrderBtn.addActionListener(e -> {
+            if (orderHistory.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "No orders to undo.");
+                return;
+            }
+            Order lastOrder = orderHistory.pop();
+            allOrders.remove(lastOrder);
+            JOptionPane.showMessageDialog(frame, "Last order undone: " + lastOrder);
+        });
+
+        // Add undo button to the search panel
+        searchPanel.add(undoOrderBtn);
+
+        // Apply Merge Sort before displaying the book list
+        Sorting.mergeSortByTitle(bookList);
 
         // Order ID search event
         searchBtn.addActionListener(e -> {
@@ -211,23 +235,23 @@ public class Main {
                 JOptionPane.showMessageDialog(frame, "Enter the Order ID you want to find!");
                 return;
             }
-            Order found = null;
-            for (Order o : allOrders) {
-                if (o.orderId.equalsIgnoreCase(searchId)) {
-                    found = o;
-                    break;
-                }
-            }
+
+            // Ensure the order list is sorted before binary search
+            allOrders.sort(Comparator.comparing(o -> o.orderId));
+
+            Order found = Searching.binarySearchById(allOrders, searchId);
             if (found != null) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("Order ID: ").append(found.orderId).append("\n"); 
-                sb.append("Customer: ").append(found.customerName).append("\n"); 
-                sb.append("Address: ").append(found.shippingAddress).append("\n"); 
+                sb.append("Order ID: ").append(found.orderId).append("\n");
+                sb.append("Customer: ").append(found.customerName).append("\n");
+                sb.append("Address: ").append(found.shippingAddress).append("\n");
                 sb.append("List of books ordered:\n");
                 double total = 0;
                 for (Book b : found.books) {
                     double itemTotal = b.price * b.quantity;
-                    sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ").append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ").append(itemTotal).append("\n");
+                    sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ")
+                            .append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ")
+                            .append(itemTotal).append("\n");
                     total += itemTotal;
                 }
                 sb.append("Total order amount: ").append(total).append(" USD\n");
@@ -255,17 +279,19 @@ public class Main {
                 }
             }
             if (removed) {
-            	// Display the order list again
+                // Display the order list again
                 StringBuilder sb = new StringBuilder();
                 for (Order o : allOrders) {
-                	sb.append("Order ID: ").append(o.orderId).append("\n");
-                	sb.append("Customer: ").append(o.customerName).append("\n");
-                	sb.append("Address: ").append(o.shippingAddress).append("\n");
-                	sb.append("List of books ordered:\n");
+                    sb.append("Order ID: ").append(o.orderId).append("\n");
+                    sb.append("Customer: ").append(o.customerName).append("\n");
+                    sb.append("Address: ").append(o.shippingAddress).append("\n");
+                    sb.append("List of books ordered:\n");
                     double total = 0;
                     for (Book b : o.books) {
                         double itemTotal = b.price * b.quantity;
-                        sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ").append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ").append(itemTotal).append("\n");
+                        sb.append("- ").append(b.title).append(" | ").append(b.author).append(" | Quantity: ")
+                                .append(b.quantity).append(" | Price: ").append(b.price).append(" | Total amount: ")
+                                .append(itemTotal).append("\n");
                         total += itemTotal;
                     }
                     sb.append("Total order amount: ").append(total).append(" USD\n");
@@ -285,9 +311,11 @@ public class Main {
                 bookList.remove(lastAddedBook);
                 bookListModel.removeElement(lastAddedBook.title);
                 bookCombo.removeItem(lastAddedBook.title + " | " + lastAddedBook.author);
-                JOptionPane.showMessageDialog(frame, "Undo successful: Removed book - " + lastAddedBook.title, "Undo Success", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "Undo successful: Removed book - " + lastAddedBook.title,
+                        "Undo Success", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(frame, "No books to undo. Make sure you have added books before undoing.", "Undo Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "No books to undo. Make sure you have added books before undoing.",
+                        "Undo Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -296,5 +324,21 @@ public class Main {
         frame.add(addBookPanel);
         frame.add(orderPanel);
         frame.setVisible(true);
+    }
+
+    // Example usage: Adding an order to history
+    public static void addOrderToHistory(Order order) {
+        orderHistory.push(order);
+        System.out.println("Order added to history: " + order);
+    }
+
+    // Example usage: Undo last order
+    public static void undoLastOrder() {
+        if (!orderHistory.isEmpty()) {
+            Order lastOrder = orderHistory.pop();
+            System.out.println("Last order undone: " + lastOrder);
+        } else {
+            System.out.println("No orders to undo.");
+        }
     }
 }
