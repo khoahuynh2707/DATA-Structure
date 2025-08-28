@@ -9,7 +9,7 @@ public class Main {
     private static final java.util.List<Book> orderList = new ArrayList<>();
     private static final DefaultListModel<String> bookListModel = new DefaultListModel<>();
     private static final DefaultListModel<String> orderListModel = new DefaultListModel<>();
-    private static final JLabel totalOrderLabel = new JLabel("Tổng tiền đơn hàng: 0");
+    private static final JLabel totalOrderLabel = new JLabel("Total order amount: 0");
     private static final java.util.List<Order> allOrders = new ArrayList<>();
     private static final Stack<Book> bookHistory = new Stack<>();
 
