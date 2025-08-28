@@ -5,10 +5,9 @@ import java.util.List;
 
 
 public class Sorting {
-    // Merge Sort implementation
     public static void mergeSortByTitle(List<Book> books) {
         if (books.size() < 2) {
-            return; // Base case: already sorted
+            return; 
         }
 
         int mid = books.size() / 2;
