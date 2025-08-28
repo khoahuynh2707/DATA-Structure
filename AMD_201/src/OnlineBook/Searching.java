@@ -14,11 +14,11 @@ public class Searching {
 
             // Compare the middle element with the target
             if (midOrder.orderId.equals(orderId)) {
-                return midOrder; // Found the order
+                return midOrder; 
             } else if (midOrder.orderId.compareTo(orderId) < 0) {
-                left = mid + 1; // Search in the right half
+                left = mid + 1; 
             } else {
-                right = mid - 1; // Search in the left half
+                right = mid - 1; 
             }
         }
 
